@@ -1,0 +1,7 @@
+version: 3
+
+tasks:
+  build:
+    desc: Build the app for Windows
+    cmds:
+      - go build -ldflags -H=windowsgui -o build/valorantAccountTracker.exe main.go

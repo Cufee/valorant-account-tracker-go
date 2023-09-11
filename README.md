@@ -13,8 +13,8 @@ Here is what I have in mind:\
 # How to get started
 
 - Clone the code
-- Install [go](https://go.dev/)
-- `go build -o build/valorantAccountTracker.exe main.go`
+- Install [go](https://go.dev/) and [Task](https://taskfile.dev/installation/)
+- `task build`
 - Open Valorant
 - Run the executable in `build/`
 - (Optional) Add to Windows startup folder
