@@ -3,7 +3,7 @@ package ui
 import (
 	"os"
 
-	"github.com/byvko-dev/valorant-state-go/internal/ui/icons"
+	"github.com/byvko-dev/valorant-account-tracker-go/internal/ui/icons"
 	"github.com/getlantern/systray"
 )
 

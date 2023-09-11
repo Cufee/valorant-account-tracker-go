@@ -1,4 +1,4 @@
-module github.com/byvko-dev/valorant-state-go
+module github.com/byvko-dev/valorant-account-tracker-go
 
 go 1.21.0
 

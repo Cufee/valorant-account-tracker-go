@@ -3,7 +3,7 @@ package views
 import (
 	_ "embed"
 
-	"github.com/byvko-dev/valorant-state-go/internal/types"
+	"github.com/byvko-dev/valorant-account-tracker-go/internal/types"
 )
 
 type AccountViewProps struct {
