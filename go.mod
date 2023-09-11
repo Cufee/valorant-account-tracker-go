@@ -1,4 +1,4 @@
-module github.com/byvko-dev/valorant-account-tracker-go
+module github.com/Cufee/valorant-account-tracker-go
 
 go 1.21.0
 

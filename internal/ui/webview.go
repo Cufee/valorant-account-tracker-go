@@ -3,8 +3,8 @@ package ui
 import (
 	"log"
 
-	"github.com/byvko-dev/valorant-account-tracker-go/internal/types"
-	"github.com/byvko-dev/valorant-account-tracker-go/internal/ui/views"
+	"github.com/Cufee/valorant-account-tracker-go/internal/types"
+	"github.com/Cufee/valorant-account-tracker-go/internal/ui/views"
 	"github.com/jchv/go-webview2"
 )
 

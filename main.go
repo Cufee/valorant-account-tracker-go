@@ -5,7 +5,7 @@ import (
 	"os/signal"
 	"syscall"
 
-	"github.com/byvko-dev/valorant-account-tracker-go/internal/ui"
+	"github.com/Cufee/valorant-account-tracker-go/internal/ui"
 )
 
 func main() {
