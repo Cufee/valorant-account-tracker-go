@@ -1,4 +1,4 @@
-package riot
+package local
 
 import (
 	"encoding/base64"
@@ -6,12 +6,13 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"path/filepath"
 	"strings"
 
 	"github.com/fsnotify/fsnotify"
 )
 
-var lockfilePath = fmt.Sprintf("%s\\Riot Games\\Riot Client\\Config\\lockfile", os.Getenv("LocalAppData"))
+var lockfilePath = filepath.Join(os.Getenv("LocalAppData"), "Riot Games/Riot Client/Config/lockfile")
 var credentialsCache *LocalCredentials
 
 type LocalCredentials struct {
@@ -20,21 +21,26 @@ type LocalCredentials struct {
 	HttpAuthHeader string
 }
 
+/* Load credentials and register a watcher to update cache on lockfile changes */
 func init() {
+	log.Print("Loading local game credentials")
 	credentials, err := readLockfileCredentials(lockfilePath)
 	if err != nil {
-		panic(err)
+		log.Panicf("Failed to load local game credentials\n%s", err)
 	}
 	credentialsCache = credentials
 
 	_, err = watchLockfileFileChanges(lockfilePath)
 	if err != nil {
-		panic(err)
+		log.Panicf("Failed to register an event watcher for lockfile\n%s", err)
 	}
 }
 
-func GetLocalCredentials() *LocalCredentials {
-	return credentialsCache
+func GetLocalCredentials() (*LocalCredentials, error) {
+	if credentialsCache == nil {
+		return nil, errors.New("credentials not available")
+	}
+	return credentialsCache, nil
 }
 
 func readLockfileCredentials(path string) (*LocalCredentials, error) {
@@ -71,8 +77,8 @@ func watchLockfileFileChanges(path string) (func() error, error) {
 		return nil, err
 	}
 
-	go func() {
-		for event := range watcher.Events {
+	go func(events chan fsnotify.Event) {
+		for event := range events {
 			switch {
 			case event.Op.Has(fsnotify.Remove):
 				credentialsCache = nil
@@ -85,7 +91,7 @@ func watchLockfileFileChanges(path string) (func() error, error) {
 				credentialsCache = credentials
 			}
 		}
-	}()
+	}(watcher.Events)
 
 	if err := watcher.Add(path); err != nil {
 		watcher.Close()
@@ -93,5 +99,4 @@ func watchLockfileFileChanges(path string) (func() error, error) {
 	}
 
 	return watcher.Close, nil
-
 }

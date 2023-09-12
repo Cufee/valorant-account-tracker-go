@@ -16,7 +16,7 @@ func onReady() {
 	systray.SetTooltip("Valorant Account Tracker")
 	systray.SetIcon(icons.V)
 
-	show := systray.AddMenuItem("Show UI", "Shows the app UI")
+	show := systray.AddMenuItem("Open App", "Shows the app UI")
 	go func() {
 		for range show.ClickedCh {
 			OpenHomeView()

@@ -1,8 +1,8 @@
-package riot
+package local
 
 import (
 	_ "embed"
 )
 
 //go:embed riot.pem
-var RiotCertificate string
+var riotCertificate []byte
