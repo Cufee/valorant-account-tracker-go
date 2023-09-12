@@ -1,26 +1,24 @@
 package main
 
 import (
-	"log"
 	"os"
 	"os/signal"
 	"syscall"
 
-	"github.com/Cufee/valorant-account-tracker-go/internal/riot/local"
 	"github.com/Cufee/valorant-account-tracker-go/internal/ui"
 )
 
 func main() {
-	// Create a tray icon and open the UI
+	ui.StartWebserver()
+
 	ui.RegisterSystrayIcon()
-	ui.OpenHomeView()
+	// ui.OpenAppWindow()
 
-	session, err := local.GetGameSessionInfo()
-	if err != nil {
-		panic(err)
-	}
-
-	log.Printf("%#v", session)
+	// session, err := local.GetGameSessionInfo()
+	// if err != nil {
+	// 	log.Print(err)
+	// }
+	// log.Printf("%#v", session)
 
 	// Wait for Interrupt
 	c := make(chan os.Signal, 1)

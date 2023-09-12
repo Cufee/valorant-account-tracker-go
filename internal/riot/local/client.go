@@ -6,6 +6,7 @@ import (
 )
 
 var ErrNoGameSession = errors.New("game session not found")
+var ErrRiotClientNotRunning = errors.New("riot client is not running")
 
 // https://valapidocs.techchrism.me/endpoint/player-mmr#client-platform
 var clientPlatformValue = "ew0KCSJwbGF0Zm9ybVR5cGUiOiAiUEMiLA0KCSJwbGF0Zm9ybU9TIjogIldpbmRvd3MiLA0KCSJwbGF0Zm9ybU9TVmVyc2lvbiI6ICIxMC4wLjE5MDQyLjEuMjU2LjY0Yml0IiwNCgkicGxhdGZvcm1DaGlwc2V0IjogIlVua25vd24iDQp9"
@@ -18,6 +19,10 @@ func GetClientRegion() (string, error) {
 	var data ClientRegionResponse
 	err := request("/riotclient/region-locale", &data)
 	if err != nil {
+		if errors.Is(err, ErrResourceNotFound) {
+			// This seems to indicate that riot client was not started
+			return "", ErrRiotClientNotRunning
+		}
 		return "", err
 	}
 	if data.Region == "" {

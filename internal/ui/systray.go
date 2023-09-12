@@ -19,7 +19,7 @@ func onReady() {
 	show := systray.AddMenuItem("Open App", "Shows the app UI")
 	go func() {
 		for range show.ClickedCh {
-			OpenHomeView()
+			OpenAppWindow()
 		}
 	}()
 

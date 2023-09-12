@@ -81,6 +81,7 @@ func watchLockfileFileChanges(path string) (func() error, error) {
 		for event := range events {
 			switch {
 			case event.Op.Has(fsnotify.Remove):
+				log.Print("lockfile was deleted")
 				credentialsCache = nil
 			default:
 				log.Print("lockfile changed")

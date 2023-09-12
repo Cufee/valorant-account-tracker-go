@@ -1,14 +1,15 @@
 package ui
 
 import (
+	"fmt"
 	"log"
 
-	"github.com/Cufee/valorant-account-tracker-go/internal/types"
-	"github.com/Cufee/valorant-account-tracker-go/internal/ui/views"
 	"github.com/jchv/go-webview2"
 )
 
-func startWebview(title, html string, width, height uint) {
+var openWindow webview2.WebView
+
+func startWebview(title, url string, width, height uint) {
 	w := webview2.NewWithOptions(webview2.WebViewOptions{
 		Debug:     true,
 		AutoFocus: true,
@@ -23,39 +24,20 @@ func startWebview(title, html string, width, height uint) {
 	if w == nil {
 		log.Fatalln("Failed to load webview.")
 	}
-	defer w.Destroy()
+	openWindow = w
+	defer func() {
+		openWindow = nil
+		w.Destroy()
+	}()
 	w.SetSize(800, 600, webview2.HintFixed)
-	w.SetHtml(html)
+	w.Navigate(url)
 	w.Run()
 }
 
-func OpenHomeView() error {
-	var accounts views.AccountViewProps = views.AccountViewProps{
-		Accounts: []types.Account{{
-			Tag:      "0000",
-			Name:     "NameHere",
-			Username: "Username",
-			LastRank: types.Rank{
-				Icon: "",
-			},
-		}, {
-			Tag:      "0001",
-			Name:     "Name 2",
-			Username: "username 2",
-			LastRank: types.Rank{
-				Icon: "",
-			},
-		}},
+func OpenAppWindow() error {
+	if openWindow != nil {
+		return nil
 	}
-
-	props := make(map[string]any)
-	props["AccountsProps"] = accounts
-
-	html, err := views.Home.Render(props)
-	if err != nil {
-		return err
-	}
-
-	go startWebview("Valorant Account Tracker", html, 800, 600)
+	go startWebview("Valorant Account Tracker", fmt.Sprintf("http://127.0.0.1:%v", getWebserverPort()), 800, 600)
 	return nil
 }
