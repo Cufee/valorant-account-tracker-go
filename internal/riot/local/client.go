@@ -9,7 +9,7 @@ var ErrNoGameSession = errors.New("game session not found")
 var ErrRiotClientNotRunning = errors.New("riot client is not running")
 
 // https://valapidocs.techchrism.me/endpoint/player-mmr#client-platform
-var clientPlatformValue = "ew0KCSJwbGF0Zm9ybVR5cGUiOiAiUEMiLA0KCSJwbGF0Zm9ybU9TIjogIldpbmRvd3MiLA0KCSJwbGF0Zm9ybU9TVmVyc2lvbiI6ICIxMC4wLjE5MDQyLjEuMjU2LjY0Yml0IiwNCgkicGxhdGZvcm1DaGlwc2V0IjogIlVua25vd24iDQp9"
+var clientPlatformValue = "eyJwbGF0Zm9ybVR5cGUiOiJQQyIsInBsYXRmb3JtT1MiOiJXaW5kb3dzIiwicGxhdGZvcm1PU1ZlcnNpb24iOiIxMC4wLjE5MDQyLjEuMjU2LjY0Yml0IiwicGxhdGZvcm1DaGlwc2V0IjoiVW5rbm93biJ9"
 
 type ClientRegionResponse struct {
 	Region string `json:"region"`

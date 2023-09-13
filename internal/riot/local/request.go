@@ -19,7 +19,6 @@ type ErrorResponseBody struct {
 
 var httpClient *http.Client
 var ErrNilResponse = errors.New("response is blank")
-var ErrNotJSON = errors.New("response type is not json")
 var ErrResourceNotFound = errors.New("resource not found")
 
 func init() {
@@ -58,9 +57,6 @@ func request(path string, target interface{}) error {
 	if response == nil {
 		return ErrNilResponse
 	}
-	if response.Header.Get("Content-Type") != "application/json" {
-		return ErrNotJSON
-	}
 
 	b, err := io.ReadAll(response.Body)
 	if err != nil {
@@ -76,7 +72,7 @@ func request(path string, target interface{}) error {
 		return ErrResourceNotFound
 	}
 	if errorData.Message != "" {
-		return fmt.Errorf("game api returned an error: %s", errorData.Message)
+		return fmt.Errorf("game api request '%s' returned an error: %s", path, errorData.Message)
 	}
 
 	return json.Unmarshal(b, target)

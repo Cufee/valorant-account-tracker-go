@@ -1,5 +1,7 @@
 package local
 
+import "github.com/Cufee/valorant-account-tracker-go/internal/riot"
+
 type EntitlementsTokenResponse struct {
 	AccessToken  string        `json:"accessToken"`
 	Entitlements []interface{} `json:"entitlements"`
@@ -8,14 +10,9 @@ type EntitlementsTokenResponse struct {
 	Token        string        `json:"token"`
 }
 
-type AccessTokens struct {
-	AccessToken      string
-	EntitlementToken string
-}
-
-func GetAccessTokens() (AccessTokens, error) {
+func GetAccessTokens() (riot.AccessTokens, error) {
 	var data EntitlementsTokenResponse
-	var tokens AccessTokens
+	var tokens riot.AccessTokens
 
 	err := request("/entitlements/v1/token", &data)
 	if err != nil {
