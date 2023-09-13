@@ -1,6 +1,7 @@
 package main
 
 import (
+	"log"
 	"os"
 	"os/signal"
 	"syscall"
@@ -9,37 +10,17 @@ import (
 )
 
 func main() {
-	ui.StartWebserver()
+	_, err := ui.StartWebserver()
+	if err != nil {
+		log.Panicf("failed to start a web server: %s", err)
+	}
 
 	ui.RegisterSystrayIcon()
-	ui.OpenAppWindow()
 
-	// account, err := logic.GetCurrentPlayerAccount()
-	// if err != nil {
-	// 	log.Panicf("Failed to get game session info: %s", err)
-	// }
-
-	// db, err := database.GetClient()
-	// if err != nil {
-	// 	log.Panicf("Failed to get database client: %s", err)
-	// }
-
-	// encoded, err := json.Marshal(account)
-	// if err != nil {
-	// 	log.Panicf("Failed to encode account: %s", err)
-	// }
-	// err = db.Set("accounts", account.ID, encoded)
-	// if err != nil {
-	// 	log.Panicf("Failed to set account: %s", err)
-	// }
-
-	// var decoded types.Account
-	// err = db.GetEncoded("accounts", account.ID, &decoded, json.Unmarshal)
-	// if err != nil {
-	// 	log.Panicf("Failed to get account: %s", err)
-	// }
-
-	// log.Printf("Decoded: %+v", decoded)
+	err = ui.OpenAppInBrowser()
+	if err != nil {
+		log.Panicf("failed to start a web server: %s", err)
+	}
 
 	// Wait for Interrupt
 	c := make(chan os.Signal, 1)

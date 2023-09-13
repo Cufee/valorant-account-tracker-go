@@ -2,7 +2,6 @@ package ui
 
 import (
 	"encoding/json"
-	"log"
 	"net"
 
 	"github.com/Cufee/valorant-account-tracker-go/internal/database"
@@ -13,19 +12,18 @@ import (
 
 var webServerPort int
 
-func StartWebserver() error {
+func StartWebserver() (int, error) {
 	dbClient, err := database.GetClient()
 	if err != nil {
-		return err
+		return 0, err
 	}
 
 	// Get a random available port
 	l, err := net.Listen("tcp", ":0")
 	if err != nil {
-		return nil
+		return 0, nil
 	}
 	webServerPort = l.Addr().(*net.TCPAddr).Port
-	log.Print(webServerPort)
 
 	// Start the Fiber server
 	app := fiber.New(fiber.Config{
@@ -64,7 +62,7 @@ func StartWebserver() error {
 	})
 
 	go app.Listener(l)
-	return nil
+	return webServerPort, nil
 }
 
 func getWebserverPort() int {
