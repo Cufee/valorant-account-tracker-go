@@ -1,9 +1,11 @@
 package ui
 
 import (
+	"encoding/json"
 	"log"
 	"net"
 
+	"github.com/Cufee/valorant-account-tracker-go/internal/database"
 	"github.com/Cufee/valorant-account-tracker-go/internal/types"
 	"github.com/Cufee/valorant-account-tracker-go/internal/ui/views"
 	"github.com/gofiber/fiber/v2"
@@ -12,6 +14,11 @@ import (
 var webServerPort int
 
 func StartWebserver() error {
+	dbClient, err := database.GetClient()
+	if err != nil {
+		return err
+	}
+
 	// Get a random available port
 	l, err := net.Listen("tcp", ":0")
 	if err != nil {
@@ -26,26 +33,25 @@ func StartWebserver() error {
 	})
 
 	app.Get("/", func(c *fiber.Ctx) error {
-		var accounts views.AccountViewProps = views.AccountViewProps{
-			Accounts: []types.Account{{
-				Tag:      "0000",
-				Name:     "NameHere",
-				Username: "Username",
-				LastRank: types.Rank{
-					Icon: "",
-				},
-			}, {
-				Tag:      "0001",
-				Name:     "Name 2",
-				Username: "username 2",
-				LastRank: types.Rank{
-					Icon: "",
-				},
-			}},
+		accountsRaw, err := dbClient.List("accounts")
+		if err != nil {
+			return err
+		}
+
+		var accounts []types.Account
+		for _, accountRaw := range accountsRaw {
+			var account types.Account
+			err = json.Unmarshal(accountRaw, &account)
+			if err != nil {
+				return err
+			}
+			accounts = append(accounts, account)
 		}
 
 		props := make(map[string]any)
-		props["AccountsProps"] = accounts
+		props["AccountsProps"] = views.AccountViewProps{
+			Accounts: accounts,
+		}
 
 		html, err := views.Home.Render(props)
 		if err != nil {
