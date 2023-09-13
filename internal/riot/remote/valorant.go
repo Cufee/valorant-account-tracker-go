@@ -79,8 +79,8 @@ func GetPlayerMMR(puuid string, credentials riot.AccessTokens, opts RequestOptio
 }
 
 type Season struct {
-	Content `json:"embedded"`
-	Type    string `json:"Type"`
+	Content
+	Type string `json:"Type"`
 }
 
 type Content struct {
@@ -102,6 +102,5 @@ func GetGameContent(opts RequestOptions) (GameContent, error) {
 	if err != nil {
 		return GameContent{}, err
 	}
-
 	return data, nil
 }

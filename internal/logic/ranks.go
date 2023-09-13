@@ -1,13 +1,17 @@
 package logic
 
-import "github.com/Cufee/valorant-account-tracker-go/internal/riot/remote"
+import (
+	"slices"
+
+	"github.com/Cufee/valorant-account-tracker-go/internal/riot/remote"
+)
 
 type PlayerRank struct {
 	SeasonId string `json:"seasonId"`
 	Tier     int    `json:"tier"`
 }
 
-func ParseLastPlayerRank(mmr remote.PlayerMMR, sortedSeasons []remote.Season) (PlayerRank, error) {
+func ParseLastPlayerRank(mmr remote.PlayerMMR, seasons []remote.Season) (PlayerRank, error) {
 	if mmr.LatestCompetitiveUpdate.TierAfterUpdate > 0 {
 		return PlayerRank{
 			SeasonId: mmr.LatestCompetitiveUpdate.SeasonID,
@@ -15,7 +19,8 @@ func ParseLastPlayerRank(mmr remote.PlayerMMR, sortedSeasons []remote.Season) (P
 		}, nil
 	}
 
-	for _, season := range sortedSeasons {
+	slices.Reverse(seasons)
+	for _, season := range seasons {
 		skillGroup, ok := mmr.QueueSkills["competitive"]
 		if !ok {
 			continue
