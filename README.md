@@ -6,9 +6,10 @@ on further refining this concept into something that can be easily used by
 anyone.**
 
 Here is what I have in mind:\
+[x] Simple UI\
+[x] Buildable executable with no dependencies\
 [x] A persistent service running in the background\
-[ ] Automatically detect when the account is changed and pull rank details\
-[x] Simple UI
+[ ] Automatically detect when the account is changed and pull rank details
 
 # How to get started
 
