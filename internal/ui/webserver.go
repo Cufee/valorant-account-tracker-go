@@ -26,9 +26,7 @@ func StartWebserver() (int, error) {
 	webServerPort = l.Addr().(*net.TCPAddr).Port
 
 	// Start the Fiber server
-	app := fiber.New(fiber.Config{
-		Immutable: true,
-	})
+	app := fiber.New()
 
 	app.Get("/", func(c *fiber.Ctx) error {
 		accountsRaw, err := dbClient.List("accounts")
@@ -61,7 +59,7 @@ func StartWebserver() (int, error) {
 		return nil
 	})
 
-	go app.Listener(l)
+	go panic(app.Listener(l))
 	return webServerPort, nil
 }
 
