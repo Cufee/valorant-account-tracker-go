@@ -13,6 +13,7 @@ require (
 
 require (
 	github.com/andybalholm/brotli v1.0.5 // indirect
+	github.com/bep/debounce v1.2.1
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/getlantern/context v0.0.0-20190109183933-c447772a6520 // indirect
 	github.com/getlantern/errors v0.0.0-20190325191628-abdb3e3e36f7 // indirect
@@ -30,6 +31,7 @@ require (
 	github.com/oxtoacart/bpool v0.0.0-20190530202638-03653db5a59c // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/rivo/uniseg v0.2.0 // indirect
+	github.com/rjeczalik/notify v0.9.3
 	github.com/valyala/bytebufferpool v1.0.0 // indirect
 	github.com/valyala/fasthttp v1.49.0 // indirect
 	github.com/valyala/tcplisten v1.0.0 // indirect

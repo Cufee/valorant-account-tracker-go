@@ -4,11 +4,12 @@ import (
 	"crypto/tls"
 	"encoding/json"
 	"fmt"
+	"io"
 	"log"
 	"net/http"
 
-	"github.com/fsnotify/fsnotify"
 	"github.com/gorilla/websocket"
+	"github.com/rjeczalik/notify"
 )
 
 var openSocket *websocket.Conn
@@ -16,6 +17,7 @@ var openSocket *websocket.Conn
 var (
 	defaultEvents = []string{EventNameAuthorization}
 
+	EventNameAllApiEvents  = "OnJsonApiEvent"
 	EventNameAuthorization = "OnJsonApiEvent_rso-auth_v2_authorizations"
 
 	/* A list of all events for reference */
@@ -131,9 +133,8 @@ func newSocketConnection(events ...string) error {
 	header := http.Header{}
 	header.Set("Authorization", credentials.AuthHeader)
 
-	ws, response, err := dialer.Dial(credentials.WssEndpoint, header)
+	ws, _, err := dialer.Dial(credentials.WssEndpoint, header)
 	if err != nil {
-		log.Printf("Response: %v", response)
 		log.Printf("Failed to connect to websocket: %s", err)
 		return err
 	}
@@ -155,10 +156,21 @@ func newSocketConnection(events ...string) error {
 
 	go func() {
 		for {
-			_, message, err := ws.ReadMessage()
+			messageType, reader, err := ws.NextReader()
 			if err != nil {
-				log.Println("read:", err)
+				log.Printf("Failed to get websocket reader: %s", err)
 				return
+			}
+			if messageType == websocket.CloseMessage {
+				openSocket = nil
+				EventBus.Publish(TopicSocketClosed, nil)
+				return
+			}
+
+			message, err := io.ReadAll(reader)
+			if err != nil {
+				log.Printf("Failed to read websocket message: %s", err)
+				continue
 			}
 
 			if len(message) == 0 {
@@ -173,24 +185,20 @@ func newSocketConnection(events ...string) error {
 				continue
 			}
 			if len(data) != 3 {
+				log.Printf("Invalid websocket message: %s", message)
 				continue
 			}
 
 			EventBus.Publish(TopicSocketMessage, map[string]interface{}{fmt.Sprint(data[1]): data[2]})
+			log.Printf("Received websocket message: %s", data[1])
 		}
 	}()
 
 	return nil
 }
 
-func updateSocketFromEvent(data interface{}) {
-	op, ok := data.(fsnotify.Op)
-	if !ok {
-		log.Printf("Invalid data type received for credentials update: %T", data)
-		return
-	}
-
-	if op == fsnotify.Remove {
+func updateSocketFromEvent(event notify.Event) {
+	if event == notify.Remove {
 		if openSocket != nil {
 			openSocket.Close()
 			openSocket = nil
@@ -202,6 +210,7 @@ func updateSocketFromEvent(data interface{}) {
 	err := newSocketConnection()
 	if err != nil {
 		log.Printf("Failed to connect to websocket: %s", err)
+		return
 	}
 	log.Print("Connected to websocket")
 }

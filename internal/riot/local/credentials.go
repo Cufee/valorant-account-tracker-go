@@ -8,8 +8,10 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"time"
 
-	"github.com/fsnotify/fsnotify"
+	"github.com/bep/debounce"
+	"github.com/rjeczalik/notify"
 )
 
 var lockfilePath = filepath.Join(os.Getenv("LocalAppData"), "Riot Games/Riot Client/Config/lockfile")
@@ -19,13 +21,14 @@ type LocalCredentials struct {
 	HttpEndpoint string
 	WssEndpoint  string
 	AuthHeader   string
+	raw          string
 }
 
 func init() {
-	onChange := func(event fsnotify.Event) {
-		EventBus.Publish(TopicCredentialsChanged, event.Op)
+	onChange := func(event notify.Event) {
+		EventBus.Publish(TopicCredentialsChanged, event)
 	}
-	if _, err := watchFileChanges(lockfilePath, onChange); err != nil {
+	if _, err := watchFileChanges(lockfilePath, onChange, time.Second*1); err != nil {
 		log.Panicf("Failed to register an event watcher for lockfile\n%s", err)
 	}
 }
@@ -61,59 +64,53 @@ func readLockfileCredentials(path string) (*LocalCredentials, error) {
 	credentials.HttpEndpoint = fmt.Sprintf("%s://127.0.0.1:%s", credsSlice[4], credsSlice[2])
 	encodedAuthHeader := base64.StdEncoding.EncodeToString([]byte(fmt.Sprintf("riot:%s", credsSlice[3])))
 	credentials.AuthHeader = fmt.Sprintf("Basic %s", encodedAuthHeader)
+	credentials.raw = string(content)
 
 	return &credentials, nil
 }
 
-func watchFileChanges(path string, callback func(fsnotify.Event)) (func() error, error) {
-	watcher, err := fsnotify.NewWatcher()
-	if err != nil {
+func watchFileChanges(path string, callback func(notify.Event), debounceTimeout time.Duration) (func(), error) {
+	c := make(chan notify.EventInfo, 1)
+	var debounce = debounce.New(debounceTimeout)
+
+	if err := notify.Watch(filepath.Dir(path), c, notify.Create, notify.Write, notify.Remove); err != nil {
 		return nil, err
 	}
 
-	go func(events chan fsnotify.Event) {
-		for event := range events {
-			switch {
-			default:
-				log.Printf("lockfile changed: %s", event.Op.String())
-				callback(event)
+	go func() {
+		for {
+			info := <-c
+			if info.Path() == path {
+				debounce(func() { callback(info.Event()) })
 			}
 		}
-	}(watcher.Events)
+	}()
 
-	if err := watcher.Add(path); err != nil {
-		watcher.Close()
-		return nil, err
-	}
-
-	return watcher.Close, nil
+	return func() { notify.Stop(c) }, nil
 }
 
-func updateCredentialsCache() error {
+func updateCredentialsCache() (bool, error) {
 	credentials, err := readLockfileCredentials(lockfilePath)
 	if err != nil {
 		credentialsCache = nil
-		return err
+		return true, err
+	}
+	if credentialsCache != nil && credentialsCache.raw == credentials.raw {
+		return false, nil
 	}
 	credentialsCache = credentials
-	return nil
+	return true, nil
 }
 
-func updateCredentialsCacheFromEvent(data interface{}) {
-	op, ok := data.(fsnotify.Op)
-	if !ok {
-		log.Printf("Invalid data type received for credentials update: %T", data)
-		return
-	}
-
-	if op == fsnotify.Remove {
+func updateCredentialsCacheFromEvent(event notify.Event) {
+	if event == notify.Remove {
 		credentialsCache = nil
 		EventBus.Publish(TopicCredentialsDeleted, nil)
 		log.Print("Credentials cache deleted")
 		return
 	}
 
-	if err := updateCredentialsCache(); err != nil {
+	if _, err := updateCredentialsCache(); err != nil {
 		log.Printf("Failed to update credentials cache\n%s", err)
 	}
 	log.Print("Credentials cache updated")
