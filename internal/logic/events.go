@@ -15,7 +15,7 @@ func ListenForAccountUpdates() {
 
 	for e := range onSocketMessage {
 		go func(event events.DataEvent) {
-			data, ok := e.Data.(map[string]interface{})
+			data, ok := event.Data.(map[string]interface{})
 			if !ok || data[local.EventNameAuthorization] == nil {
 				return
 			}
