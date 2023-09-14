@@ -15,7 +15,7 @@ rank each of your accounts ended up in, you can use this app to check.
 [x] Buildable executable with no dependencies
   [ ] Automatically test and build on push
 [x] A persistent service running in the background
-[ ] Automatically detect when the account is changed and pull rank details
+[x] Automatically detect when the account is changed and pull rank details
 </pre>
 
 ## How to get started
