@@ -16,22 +16,16 @@ var lockfilePath = filepath.Join(os.Getenv("LocalAppData"), "Riot Games/Riot Cli
 var credentialsCache *LocalCredentials
 
 type LocalCredentials struct {
-	WssEndpoint    string
-	HttpEndpoint   string
-	HttpAuthHeader string
+	HttpEndpoint string
+	WssEndpoint  string
+	AuthHeader   string
 }
 
-/* Load credentials and register a watcher to update cache on lockfile changes */
 func init() {
-	log.Print("Loading local game credentials")
-	credentials, err := readLockfileCredentials(lockfilePath)
-	if err != nil {
-		log.Panicf("Failed to load local game credentials\n%s", err)
+	onChange := func(event fsnotify.Event) {
+		EventBus.Publish(TopicCredentialsChanged, event.Op)
 	}
-	credentialsCache = credentials
-
-	_, err = watchLockfileFileChanges(lockfilePath)
-	if err != nil {
+	if _, err := watchFileChanges(lockfilePath, onChange); err != nil {
 		log.Panicf("Failed to register an event watcher for lockfile\n%s", err)
 	}
 }
@@ -63,15 +57,15 @@ func readLockfileCredentials(path string) (*LocalCredentials, error) {
 	}
 
 	var credentials LocalCredentials
-	credentials.WssEndpoint = fmt.Sprintf("wss://riot:%s@127.0.0.1:%s", credsSlice[3], credsSlice[2])
+	credentials.WssEndpoint = fmt.Sprintf("wss://127.0.0.1:%s", credsSlice[2])
 	credentials.HttpEndpoint = fmt.Sprintf("%s://127.0.0.1:%s", credsSlice[4], credsSlice[2])
 	encodedAuthHeader := base64.StdEncoding.EncodeToString([]byte(fmt.Sprintf("riot:%s", credsSlice[3])))
-	credentials.HttpAuthHeader = fmt.Sprintf("Basic %s", encodedAuthHeader)
+	credentials.AuthHeader = fmt.Sprintf("Basic %s", encodedAuthHeader)
 
 	return &credentials, nil
 }
 
-func watchLockfileFileChanges(path string) (func() error, error) {
+func watchFileChanges(path string, callback func(fsnotify.Event)) (func() error, error) {
 	watcher, err := fsnotify.NewWatcher()
 	if err != nil {
 		return nil, err
@@ -80,16 +74,9 @@ func watchLockfileFileChanges(path string) (func() error, error) {
 	go func(events chan fsnotify.Event) {
 		for event := range events {
 			switch {
-			case event.Op.Has(fsnotify.Remove):
-				log.Print("lockfile was deleted")
-				credentialsCache = nil
 			default:
-				log.Print("lockfile changed")
-				credentials, err := readLockfileCredentials(path)
-				if err != nil {
-					return
-				}
-				credentialsCache = credentials
+				log.Printf("lockfile changed: %s", event.Op.String())
+				callback(event)
 			}
 		}
 	}(watcher.Events)
@@ -100,4 +87,34 @@ func watchLockfileFileChanges(path string) (func() error, error) {
 	}
 
 	return watcher.Close, nil
+}
+
+func updateCredentialsCache() error {
+	credentials, err := readLockfileCredentials(lockfilePath)
+	if err != nil {
+		credentialsCache = nil
+		return err
+	}
+	credentialsCache = credentials
+	return nil
+}
+
+func updateCredentialsCacheFromEvent(data interface{}) {
+	op, ok := data.(fsnotify.Op)
+	if !ok {
+		log.Printf("Invalid data type received for credentials update: %T", data)
+		return
+	}
+
+	if op == fsnotify.Remove {
+		credentialsCache = nil
+		EventBus.Publish(TopicCredentialsDeleted, nil)
+		log.Print("Credentials cache deleted")
+		return
+	}
+
+	if err := updateCredentialsCache(); err != nil {
+		log.Printf("Failed to update credentials cache\n%s", err)
+	}
+	log.Print("Credentials cache updated")
 }

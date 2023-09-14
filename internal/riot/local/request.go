@@ -2,7 +2,6 @@ package local
 
 import (
 	"crypto/tls"
-	"crypto/x509"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -22,8 +21,7 @@ var ErrNilResponse = errors.New("response is blank")
 var ErrResourceNotFound = errors.New("resource not found")
 
 func init() {
-	caCertPool := x509.NewCertPool()
-	caCertPool.AppendCertsFromPEM(riotCertificate)
+
 	httpClient = &http.Client{
 		Transport: &http.Transport{
 			TLSClientConfig: &tls.Config{
@@ -48,7 +46,7 @@ func request(path string, target interface{}) error {
 	if err != nil {
 		return err
 	}
-	request.Header.Set("Authorization", credentials.HttpAuthHeader)
+	request.Header.Set("Authorization", credentials.AuthHeader)
 
 	response, err := httpClient.Do(request)
 	if err != nil {

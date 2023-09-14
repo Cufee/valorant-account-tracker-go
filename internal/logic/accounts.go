@@ -8,11 +8,11 @@ import (
 
 func GetCurrentPlayerAccount() (types.Account, error) {
 	// local api
-	credentials, err := local.GetAccessTokens()
+	session, err := local.GetGameSessionInfo()
 	if err != nil {
 		return types.Account{}, err
 	}
-	session, err := local.GetGameSessionInfo()
+	credentials, err := local.GetAccessTokens()
 	if err != nil {
 		return types.Account{}, err
 	}
